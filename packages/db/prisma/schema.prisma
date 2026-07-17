@@ -11,6 +11,10 @@ datasource db {
   relationMode = "prisma"
 }
 
+// ============================================================================
+// Auth & Billing (existente del boilerplate — NO tocar)
+// ============================================================================
+
 enum SubscriptionPlan {
   FREE
   PRO
@@ -67,6 +71,11 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  businessMemberships BusinessMember[]
+  ownedBusinesses     Business[]       @relation("BusinessOwner")
+  sales               Sale[]           @relation("SoldByUser")
+  expenses            Expense[]        @relation("CreatedByUser")
 }
 
 model VerificationToken {
@@ -77,27 +86,263 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model K8sClusterConfig {
-  id         Int               @id @default(autoincrement())
-  name       String
-  location   String
-  authUserId String
-  plan       SubscriptionPlan? @default(FREE)
-  network    String?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @default(now())
-  status     Status?           @default(PENDING)
-  delete     Boolean?          @default(false)
+// ============================================================================
+// Dominio SaaS: negocios, ventas, egresos, reportes
+// ============================================================================
 
-  // @@unique([plan, authUserId])
-  @@index([authUserId])
+// Un negocio (tenant). Cada usuario puede pertenecer a varios via BusinessMember.
+model Business {
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  name         String
+  legalName    String?  // Razón social
+  rut          String?  // RUT chileno del negocio (ej "76.123.456-7")
+  currency     String   @default("CLP") // ISO 4217. Determina la unidad de los montos.
+  timezone     String   @default("America/Santiago")
+  address      String?
+  phone        String?
+  logoUrl      String?
+
+  ownerId      String
+  owner        User     @relation("BusinessOwner", fields: [ownerId], references: [id])
+
+  members      BusinessMember[]
+  categories   Category[]
+  products     Product[]
+  clients      Client[]
+  sales        Sale[]
+  expenses     Expense[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@index([ownerId])
+  @@index([rut])
 }
 
-enum Status {
+enum BusinessRole {
+  OWNER   // Puede todo, incluido borrar el negocio
+  ADMIN   // Puede todo excepto borrar el negocio ni cambiar dueño
+  STAFF   // Puede vender y ver su propio historial
+  CASHIER // Solo vender (POS), no ve reportes
+}
+
+// Relación N a N entre User y Business con rol.
+model BusinessMember {
+  id         String       @id @default(dbgenerated("gen_random_uuid()"))
+  businessId String
+  userId     String
+  role       BusinessRole @default(STAFF)
+  active     Boolean      @default(true)
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([businessId, userId])
+  @@index([userId])
+  @@index([businessId])
+}
+
+// Categorías: se usan para agrupar productos, servicios y egresos en reportes.
+enum CategoryKind {
+  PRODUCT
+  SERVICE
+  EXPENSE
+}
+
+model Category {
+  id         String       @id @default(dbgenerated("gen_random_uuid()"))
+  businessId String
+  name       String
+  kind       CategoryKind
+  color      String?      // Hex opcional para UI
+
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products   Product[]
+  expenses   Expense[]
+
+  createdAt  DateTime @default(now())
+
+  @@unique([businessId, kind, name])
+  @@index([businessId])
+}
+
+// Item vendible: producto físico o servicio (diferenciado por kind).
+enum ProductKind {
+  GOOD    // Bien físico, puede tener stock
+  SERVICE // Servicio, sin stock ni SKU
+}
+
+model Product {
+  id           String      @id @default(dbgenerated("gen_random_uuid()"))
+  businessId   String
+  categoryId   String?
+  kind         ProductKind @default(GOOD)
+
+  name         String
+  description  String?
+  sku          String?     // Código interno / código de barras
+  imageUrl     String?
+
+  // Precios en la unidad más chica de la moneda del business (para CLP: pesos).
+  price        Int         // Precio de venta
+  cost         Int?        // Costo unitario (para calcular margen)
+
+  // Inventario (solo aplica si kind = GOOD)
+  trackStock   Boolean     @default(false)
+  stock        Int?        // null si trackStock=false
+  stockAlertAt Int?        // Alerta cuando stock <= este valor
+
+  // Servicios pueden tener duración (útil cuando se sume la agenda)
+  durationMinutes Int?
+
+  active       Boolean     @default(true)
+
+  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  saleItems    SaleItem[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @default(now()) @updatedAt
+
+  @@unique([businessId, sku])
+  @@index([businessId])
+  @@index([businessId, active])
+  @@index([categoryId])
+}
+
+// Cliente del negocio (comprador). Puede ser anónimo (venta sin cliente asociado).
+model Client {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  businessId String
+
+  name       String
+  rut        String?  // RUT del cliente si se emitirá boleta/factura
+  email      String?
+  phone      String?
+  address    String?
+  notes      String?
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  sales      Sale[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([businessId])
+  @@index([businessId, rut])
+  @@index([businessId, email])
+}
+
+// Cabecera de una venta.
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  MERCADO_PAGO
+  WEBPAY
+  OTHER
+}
+
+enum SaleStatus {
+  DRAFT      // Carrito abierto en el POS, no confirmado
+  COMPLETED  // Venta confirmada
+  REFUNDED   // Devuelta al cliente
+  CANCELLED  // Anulada sin devolución
+}
+
+enum BoletaStatus {
+  NOT_ISSUED
   PENDING
-  CREATING
-  INITING
-  RUNNING
-  STOPPED
-  DELETED
+  ISSUED
+  REJECTED
+}
+
+model Sale {
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
+  businessId    String
+  clientId      String?    // Anónima si null
+  soldByUserId  String?    // Usuario que registró la venta (staff/cashier)
+
+  // Correlativo interno del negocio (autoincrementable en app, no en DB)
+  receiptNumber Int?
+
+  // Montos en la unidad más chica de la moneda del business.
+  subtotal      Int        // Suma de items antes de descuento/impuesto
+  discount      Int        @default(0)
+  tax           Int        @default(0)  // IVA — cálculo automático se agrega después
+  total         Int        // subtotal - discount + tax
+
+  paymentMethod PaymentMethod
+  status        SaleStatus    @default(COMPLETED)
+
+  // Boleta electrónica (se llenan al integrar OpenFactura/Bsale)
+  boletaStatus  BoletaStatus  @default(NOT_ISSUED)
+  boletaFolio   String?
+  boletaUrl     String?
+
+  notes         String?
+
+  // Fecha en que ocurrió la venta (puede diferir de createdAt si se registra tarde)
+  soldAt        DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  soldBy     User?    @relation("SoldByUser", fields: [soldByUserId], references: [id], onDelete: SetNull)
+  items      SaleItem[]
+
+  @@index([businessId])
+  @@index([businessId, soldAt])
+  @@index([businessId, status])
+  @@index([clientId])
+  @@index([soldByUserId])
+}
+
+// Línea de una venta. Guarda snapshot del producto al momento de vender.
+model SaleItem {
+  id          String  @id @default(dbgenerated("gen_random_uuid()"))
+  saleId      String
+  productId   String? // null si el producto fue borrado después
+
+  // Snapshot del producto al momento de la venta (para preservar el histórico)
+  productName String
+  unitPrice   Int
+  unitCost    Int?    // Para calcular margen en reportes
+
+  quantity    Int
+  discount    Int     @default(0)
+  total       Int     // (unitPrice * quantity) - discount
+
+  sale     Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product  Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+// Egresos del negocio (gastos, compras, sueldos, etc.).
+model Expense {
+  id              String  @id @default(dbgenerated("gen_random_uuid()"))
+  businessId      String
+  categoryId      String?
+  createdByUserId String?
+
+  description     String
+  amount          Int
+  paymentMethod   PaymentMethod @default(CASH)
+
+  occurredAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category  Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdBy User?     @relation("CreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([businessId, occurredAt])
+  @@index([categoryId])
 }

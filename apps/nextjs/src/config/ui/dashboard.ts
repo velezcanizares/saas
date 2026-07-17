@@ -25,9 +25,29 @@ export const getDashboardConfig = async ({
     ],
     sidebarNav: [
       {
-        id: "clusters",
-        title: dict.common.dashboard.sidebar_nav_clusters,
-        href: "/dashboard/",
+        id: "reports",
+        title: "Reportes",
+        href: "/dashboard/reports",
+      },
+      {
+        id: "pos",
+        title: "Vender",
+        href: "/dashboard/pos",
+      },
+      {
+        id: "sales",
+        title: "Ventas",
+        href: "/dashboard/sales",
+      },
+      {
+        id: "catalog",
+        title: "Catálogo",
+        href: "/dashboard/catalog",
+      },
+      {
+        id: "expenses",
+        title: "Egresos",
+        href: "/dashboard/expenses",
       },
       {
         id: "billing",

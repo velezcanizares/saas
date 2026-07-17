@@ -14,16 +14,31 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
 }
 
+const clerkPk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkConfigured =
+  clerkPk.startsWith("pk_test_") || clerkPk.startsWith("pk_live_");
+
 export function UserClerkAuthForm({
   className,
   lang,
   ...props
 }: UserAuthFormProps) {
-  const { user } = useUser()
-  if (user) {
-    redirect(`/${lang}/dashboard`)
+  if (!clerkConfigured) {
+    return (
+      <div className={cn("grid gap-6 text-sm text-muted-foreground", className)} {...props}>
+        Clerk is not configured. Set <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
+        <code>CLERK_SECRET_KEY</code> in <code>.env.local</code> to enable sign-in.
+      </div>
+    );
   }
+  return <ClerkForm className={className} lang={lang} {...props} />;
+}
 
+function ClerkForm({ className, lang, ...props }: UserAuthFormProps) {
+  const { user } = useUser();
+  if (user) {
+    redirect(`/${lang}/dashboard`);
+  }
   return (
     <div className={cn("grid gap-6", className)} {...props}>
       <SignIn withSignUp={false} fallbackRedirectUrl={`/${lang}/dashboard`} />

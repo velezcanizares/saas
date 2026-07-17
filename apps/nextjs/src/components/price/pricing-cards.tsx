@@ -20,6 +20,7 @@ import { Switch } from "@saasfly/ui/switch";
 import { BillingFormButton } from "~/components/price/billing-form-button";
 import { priceDataMap } from "~/config/price/price-data";
 import { useSigninModal } from "~/hooks/use-signin-modal";
+import { formatCLP } from "~/lib/format";
 import { UserSubscriptionPlan } from "~/types";
 
 interface PricingCardsProps {
@@ -40,7 +41,7 @@ export function PricingCards({
   const isYearlyDefault = true;
   const [isYearly, setIsYearly] = useState<boolean>(isYearlyDefault);
   const signInModal = useSigninModal();
-  const pricingData = priceDataMap[lang];
+  const pricingData = priceDataMap[lang] ?? priceDataMap.en;
   const toggleBilling = () => {
     setIsYearly(!isYearly);
   };
@@ -108,12 +109,14 @@ export function PricingCards({
                       {isYearly && offer?.prices?.monthly > 0 ? (
                         <>
                           <span className="mr-2 text-muted-foreground line-through">
-                            ${offer?.prices?.monthly}
+                            {formatCLP(offer?.prices?.monthly)}
                           </span>
-                          <span>${offer?.prices?.yearly / 12}</span>
+                          <span>
+                            {formatCLP(Math.round(offer?.prices?.yearly / 12))}
+                          </span>
                         </>
                       ) : (
-                        `$${offer?.prices?.monthly}`
+                        formatCLP(offer?.prices?.monthly)
                       )}
                     </div>
                     <div className="-mb-1 ml-2 text-left text-sm font-medium">
@@ -124,7 +127,7 @@ export function PricingCards({
                 {offer.prices.monthly > 0 ? (
                   <div className="text-left text-sm text-muted-foreground">
                     {isYearly
-                      ? `$${offer?.prices?.yearly} ${dict.annual_info}`
+                      ? `${formatCLP(offer?.prices?.yearly)} ${dict.annual_info}`
                       : `${dict.monthly_info}`}
                   </div>
                 ) : null}

@@ -1,19 +1,9 @@
-import { BasicItemSkeleton } from "~/components/base-item";
-import { DashboardHeader } from "~/components/header";
-import { DashboardShell } from "~/components/shell";
+import * as Icons from "@saasfly/ui/icons";
 
 export default function DashboardLoading() {
   return (
-    <DashboardShell>
-      <DashboardHeader
-        heading="kubernetes"
-        text="Create and manage clusters."
-      ></DashboardHeader>
-      <div className="divide-border-200 divide-y rounded-md border">
-        <BasicItemSkeleton />
-        <BasicItemSkeleton />
-        <BasicItemSkeleton />
-      </div>
-    </DashboardShell>
+    <div className="flex flex-1 items-center justify-center py-24">
+      <Icons.Spinner className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
   );
 }

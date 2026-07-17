@@ -22,12 +22,25 @@ interface UserAccountNavProps extends React.HTMLAttributes<HTMLDivElement> {
   dict: Record<string, string>;
 }
 
+const clerkPk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkConfigured =
+  clerkPk.startsWith("pk_test_") || clerkPk.startsWith("pk_live_");
+
+type SignOutFn = (opts?: { redirectUrl?: string }) => Promise<unknown>;
+
+function useSignOut(lang: string): SignOutFn {
+  if (clerkConfigured) return useClerk().signOut as SignOutFn;
+  return async () => {
+    window.location.href = `/${lang}/login-clerk`;
+  };
+}
+
 export function UserAccountNav({
   user,
   params: { lang },
   dict,
 }: UserAccountNavProps) {
-  const { signOut } = useClerk();
+  const signOut = useSignOut(lang);
 
   return (
     <DropdownMenu>

@@ -12,6 +12,10 @@ import { getDictionary } from "~/lib/get-dictionary";
 import { trpc } from "~/trpc/server";
 import { SubscriptionForm } from "./subscription-form";
 
+// Página autenticada por usuario (usa cookies vía tRPC): forzar dinámico para
+// que Next no intente prerenderizarla estáticamente en `next build`.
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Billing",
   description: "Manage billing and your subscription plan.",
@@ -62,7 +66,7 @@ async function SubscriptionCard({ dict }: { dict: Record<string, string> }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Subscription</CardTitle>
+        <CardTitle>Suscripción</CardTitle>
       </CardHeader>
       <CardContent>
         {subscription ? (
@@ -82,9 +86,9 @@ function UsageCard() {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle>Usage</CardTitle>
+        <CardTitle>Uso</CardTitle>
       </CardHeader>
-      <CardContent>None</CardContent>
+      <CardContent>—</CardContent>
     </Card>
   );
 }

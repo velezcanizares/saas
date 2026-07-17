@@ -13,12 +13,14 @@
     "format": "prisma format && prettier --check '**/*.{ts,json}' ",
     "db:generate": "prisma generate",
     "db:push": "bun with-env prisma db push --skip-generate",
+    "db:seed": "bun with-env bun scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env.local --"
   },
   "dependencies": {
+    "@vercel/postgres-kysely": "0.8.0",
     "kysely": "0.27.3",
-    "@vercel/postgres-kysely": "0.8.0"
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@saasfly/eslint-config": "workspace:*",
