@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { getCurrentUser } from "@saasfly/auth";
 
+import { BusinessSwitcher } from "~/components/business/business-switcher";
 import { LocaleChange } from "~/components/locale-change";
 import { MainNav } from "~/components/main-nav";
 import { DashboardNav } from "~/components/nav";
@@ -9,6 +10,7 @@ import { SiteFooter } from "~/components/site-footer";
 import { UserAccountNav } from "~/components/user-account-nav";
 import { i18n, type Locale } from "~/config/i18n-config";
 import { getDashboardConfig } from "~/config/ui/dashboard";
+import { getActiveBusiness, getBusinesses } from "~/lib/business";
 import { getDictionary } from "~/lib/get-dictionary";
 
 interface DashboardLayoutProps {
@@ -32,6 +34,10 @@ export default async function DashboardLayout({
     return notFound();
   }
   const dashboardConfig = await getDashboardConfig({ params: { lang } });
+  const [businesses, active] = await Promise.all([
+    getBusinesses(),
+    getActiveBusiness(),
+  ]);
   return (
     <div className="flex min-h-screen flex-col space-y-6">
       <header className="sticky top-0 z-40 border-b bg-background">
@@ -41,6 +47,14 @@ export default async function DashboardLayout({
             params={{ lang: `${lang}` }}
           />
           <div className="flex items-center space-x-3">
+            <BusinessSwitcher
+              businesses={businesses.map((b) => ({
+                id: b.id,
+                name: b.name,
+                role: b.role,
+              }))}
+              activeId={active?.id}
+            />
             <LocaleChange url={"/dashboard"} />
             <UserAccountNav
               user={{
