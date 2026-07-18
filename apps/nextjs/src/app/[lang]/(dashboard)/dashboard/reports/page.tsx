@@ -18,6 +18,7 @@ import {
 } from "@saasfly/ui/table";
 
 import { EmptyPlaceholder } from "~/components/empty-placeholder";
+import { RangeSelector } from "~/components/finance/range-selector";
 import { StatCard } from "~/components/finance/stat-card";
 import { DashboardShell } from "~/components/shell";
 import { getActiveBusiness } from "~/lib/business";
@@ -32,7 +33,37 @@ import { trpc } from "~/trpc/server";
 export const metadata = { title: "Reportes" };
 export const dynamic = "force-dynamic";
 
-export default async function ReportsPage() {
+/** Convierte la clave de rango (query param) en un intervalo de fechas + etiqueta. */
+function resolveRange(key: string): { from: Date; to: Date; label: string } {
+  const to = new Date();
+  const from = new Date(to);
+  switch (key) {
+    case "today":
+      from.setHours(0, 0, 0, 0);
+      return { from, to, label: "hoy" };
+    case "7d":
+      from.setDate(from.getDate() - 7);
+      return { from, to, label: "los últimos 7 días" };
+    case "month":
+      from.setDate(1);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, label: "este mes" };
+    case "year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
+      return { from, to, label: "este año" };
+    case "30d":
+    default:
+      from.setDate(from.getDate() - 30);
+      return { from, to, label: "los últimos 30 días" };
+  }
+}
+
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams?: { range?: string };
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login-clerk");
 
@@ -40,8 +71,8 @@ export default async function ReportsPage() {
   if (!business) redirect("/dashboard/business/new");
 
   const businessId = business.id;
-  const to = new Date();
-  const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const rangeKey = searchParams?.range ?? "30d";
+  const { from, to, label } = resolveRange(rangeKey);
 
   const [summary, byDay, topProducts, byCategory, byPayment, expensesByCat] =
     await Promise.all([
@@ -59,7 +90,8 @@ export default async function ReportsPage() {
   return (
     <DashboardShell
       title={business.name}
-      description="Resumen financiero de los últimos 30 días."
+      description={`Resumen financiero de ${label}.`}
+      headerAction={<RangeSelector current={rangeKey} />}
     >
       {!hasActivity ? (
         <EmptyPlaceholder>
