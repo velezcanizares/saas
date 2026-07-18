@@ -16,86 +16,26 @@ interface SubscriptionPlanTranslation {
   };
 }
 
+// Planes de la página de precios. Montos en CLP (pesos, enteros). Los locales no
+// presentes caen a `en` en el componente de precios (pricing-cards). El copy en
+// español es el primario (producto Chile-first).
 export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
-  zh: [
+  es: [
     {
       id: "starter",
-      title: "入门版",
-      description: "适合初学者",
-      benefits: ["每月最多1个集群", "基础分析和报告", "访问基础功能"],
-      limitations: [
-        "无法优先获取新功能",
-        "有限的客户支持",
-        "无法自定义品牌",
-        "对商业资源的访问受限",
-      ],
-      prices: {
-        monthly: 0,
-        yearly: 0,
-      },
-      stripeIds: {
-        monthly: null,
-        yearly: null,
-      },
-    },
-    {
-      id: "pro",
-      title: "专业版",
-      description: "解锁高级功能",
+      title: "Gratis",
+      description: "Para empezar",
       benefits: [
-        "每月最多3个集群",
-        "高级分析和报告",
-        "访问商业模板",
-        "优先客户支持",
-        "独家网络研讨会和培训",
-      ],
-      limitations: ["无法自定义品牌", "对商业资源的访问受限"],
-      prices: {
-        monthly: 30,
-        yearly: 288,
-      },
-      stripeIds: {
-        monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
-        yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
-      },
-    },
-    {
-      id: "business",
-      title: "商业版",
-      description: "适合高级用户",
-      benefits: [
-        "每月最多10个集群",
-        "实时分析和报告",
-        "访问所有模板，包括自定义品牌",
-        "全天候商业客户支持",
-        "个性化的配置和账户管理",
-      ],
-      limitations: [],
-      prices: {
-        monthly: 60,
-        yearly: 600,
-      },
-      stripeIds: {
-        monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,
-        yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PRICE_ID,
-      },
-    },
-  ],
-  en: [
-    {
-      id: "starter",
-      title: "Starter",
-      description: "For Beginners",
-      benefits: [
-        "Up to 1 cluster per month",
-        "Basic analytics and reporting",
-        "Access to basic features",
+        "1 negocio",
+        "Punto de venta (POS)",
+        "Hasta 50 productos",
+        "Reportes básicos de ventas",
+        "1 usuario",
       ],
       limitations: [
-        "No priority access to new features",
-        "Limited customer support",
-        "No custom branding",
-        "Limited access to business resources",
+        "Sin multiusuario ni roles",
+        "Sin múltiples negocios",
+        "Soporte por email",
       ],
       prices: {
         monthly: 0,
@@ -109,21 +49,19 @@ export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
     {
       id: "pro",
       title: "Pro",
-      description: "Unlock Advanced Features",
+      description: "Para tu negocio en marcha",
       benefits: [
-        "Up to 3 clusters per month",
-        "Advanced analytics and reporting",
-        "Access to business templates",
-        "Priority customer support",
-        "Exclusive webinars and training",
+        "Todo lo del plan Gratis",
+        "Productos y ventas ilimitados",
+        "Reportes completos: márgenes, top productos y egresos",
+        "Hasta 5 usuarios con roles",
+        "Historial completo de ventas",
+        "Soporte prioritario",
       ],
-      limitations: [
-        "No custom branding",
-        "Limited access to business resources",
-      ],
+      limitations: ["Un solo negocio"],
       prices: {
-        monthly: 30,
-        yearly: 288,
+        monthly: 14990,
+        yearly: 149900,
       },
       stripeIds: {
         monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
@@ -133,18 +71,18 @@ export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
     {
       id: "business",
       title: "Business",
-      description: "For Power Users",
+      description: "Para varias sucursales",
       benefits: [
-        "Up to 10 clusters per month",
-        "Real-time analytics and reporting",
-        "Access to all templates, including custom branding",
-        "24/7 business customer support",
-        "Personalized configuration and account management",
+        "Todo lo del plan Pro",
+        "Múltiples negocios o sucursales",
+        "Usuarios ilimitados",
+        "Boleta electrónica SII (próximamente)",
+        "Soporte prioritario dedicado",
       ],
       limitations: [],
       prices: {
-        monthly: 60,
-        yearly: 600,
+        monthly: 29990,
+        yearly: 299900,
       },
       stripeIds: {
         monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,
@@ -152,21 +90,22 @@ export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
       },
     },
   ],
-  ja: [
+  en: [
     {
       id: "starter",
-      title: "スターター",
-      description: "初心者向け",
+      title: "Free",
+      description: "To get started",
       benefits: [
-        "月に最大1つのクラスター",
-        "基本的な分析とレポート",
-        "基本機能へのアクセス",
+        "1 business",
+        "Point of sale (POS)",
+        "Up to 50 products",
+        "Basic sales reports",
+        "1 user",
       ],
       limitations: [
-        "新機能への優先アクセスなし",
-        "限定的なカスタマーサポート",
-        "カスタムブランディングなし",
-        "ビジネスリソースへのアクセスが限定的",
+        "No multi-user or roles",
+        "No multiple businesses",
+        "Email support",
       ],
       prices: {
         monthly: 0,
@@ -179,22 +118,20 @@ export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
     },
     {
       id: "pro",
-      title: "プロ",
-      description: "高度な機能のロックを解除",
+      title: "Pro",
+      description: "For your growing business",
       benefits: [
-        "月に最大3つのクラスター",
-        "高度な分析とレポート",
-        "ビジネステンプレートへのアクセス",
-        "優先カスタマーサポート",
-        "独占的なウェビナーとトレーニング",
+        "Everything in Free",
+        "Unlimited products and sales",
+        "Full reports: margins, top products and expenses",
+        "Up to 5 users with roles",
+        "Complete sales history",
+        "Priority support",
       ],
-      limitations: [
-        "カスタムブランディングなし",
-        "ビジネスリソースへのアクセスが限定的",
-      ],
+      limitations: ["Single business"],
       prices: {
-        monthly: 30,
-        yearly: 288,
+        monthly: 14990,
+        yearly: 149900,
       },
       stripeIds: {
         monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
@@ -203,87 +140,19 @@ export const priceDataMap: Record<string, SubscriptionPlanTranslation[]> = {
     },
     {
       id: "business",
-      title: "ビジネス",
-      description: "パワーユーザー向け",
+      title: "Business",
+      description: "For multiple locations",
       benefits: [
-        "月に最大10つのクラスター",
-        "リアルタイムの分析とレポート",
-        "すべてのテンプレート（カスタムブランディングを含む）へのアクセス",
-        "24/7のビジネスカスタマーサポート",
-        "パーソナライズされた設定とアカウント管理",
+        "Everything in Pro",
+        "Multiple businesses or locations",
+        "Unlimited users",
+        "SII electronic receipts (coming soon)",
+        "Dedicated priority support",
       ],
       limitations: [],
       prices: {
-        monthly: 60,
-        yearly: 600,
-      },
-      stripeIds: {
-        monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,
-        yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PRICE_ID,
-      },
-    },
-  ],
-  ko: [
-    {
-      id: "starter",
-      title: "스타터",
-      description: "초보자를 위한",
-      benefits: [
-        "월 최대 1개의 클러스터",
-        "기본 분석 및 보고",
-        "기본 기능에 대한 액세스",
-      ],
-      limitations: [
-        "새로운 기능에 대한 우선 액세스 없음",
-        "제한된 고객 지원",
-        "맞춤 브랜딩 없음",
-        "비즈니스 리소스에 대한 액세스 제한",
-      ],
-      prices: {
-        monthly: 0,
-        yearly: 0,
-      },
-      stripeIds: {
-        monthly: null,
-        yearly: null,
-      },
-    },
-    {
-      id: "pro",
-      title: "프로",
-      description: "고급 기능 잠금 해제",
-      benefits: [
-        "월 최대 3개의 클러스터",
-        "고급 분석 및 보고",
-        "비즈니스 템플릿에 대한 액세스",
-        "우선 고객 지원",
-        "독점 웹 세미나 및 교육",
-      ],
-      limitations: ["맞춤 브랜딩 없음", "비즈니스 리소스에 대한 액세스 제한"],
-      prices: {
-        monthly: 30,
-        yearly: 288,
-      },
-      stripeIds: {
-        monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
-        yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
-      },
-    },
-    {
-      id: "business",
-      title: "비즈니스",
-      description: "파워 사용자를 위한",
-      benefits: [
-        "월 최대 10개의 클러스터",
-        "실시간 분석 및 보고",
-        "모든 템플릿에 대한 액세스, 맞춤 브랜딩 포함",
-        "24/7 비즈니스 고객 지원",
-        "맞춤 설정 및 계정 관리",
-      ],
-      limitations: [],
-      prices: {
-        monthly: 60,
-        yearly: 600,
+        monthly: 29990,
+        yearly: 299900,
       },
       stripeIds: {
         monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,

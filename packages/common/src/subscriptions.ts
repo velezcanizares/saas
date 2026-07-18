@@ -15,20 +15,24 @@ export interface SubscriptionPlan {
   };
 }
 
+// Planes de suscripción del SaaS (lo que se le cobra al dueño de la pyme).
+// Precios en CLP (pesos chilenos, enteros). El plan anual incluye ~2 meses
+// gratis respecto al mensual.
 export const pricingData: SubscriptionPlan[] = [
   {
-    title: "Starter",
-    description: "For Beginners",
+    title: "Gratis",
+    description: "Para empezar",
     benefits: [
-      "Up to 100 monthly posts",
-      "Basic analytics and reporting",
-      "Access to standard templates",
+      "1 negocio",
+      "Punto de venta (POS)",
+      "Hasta 50 productos",
+      "Reportes básicos de ventas",
+      "1 usuario",
     ],
     limitations: [
-      "No priority access to new features.",
-      "Limited customer support",
-      "No custom branding",
-      "Limited access to business resources.",
+      "Sin multiusuario ni roles",
+      "Sin múltiples negocios",
+      "Soporte por email",
     ],
     prices: {
       monthly: 0,
@@ -41,47 +45,45 @@ export const pricingData: SubscriptionPlan[] = [
   },
   {
     title: "Pro",
-    description: "Unlock Advanced Features",
+    description: "Para tu negocio en marcha",
     benefits: [
-      "Up to 500 monthly posts",
-      "Advanced analytics and reporting",
-      "Access to business templates",
-      "Priority customer support",
-      "Exclusive webinars and training.",
+      "Todo lo del plan Gratis",
+      "Productos y ventas ilimitados",
+      "Reportes completos (márgenes, top productos, egresos)",
+      "Hasta 5 usuarios con roles",
+      "Historial completo de ventas",
+      "Soporte prioritario",
     ],
-    limitations: [
-      "No custom branding",
-      "Limited access to business resources.",
-    ],
+    limitations: ["Un solo negocio"],
     prices: {
-      monthly: 15,
-      yearly: 144,
+      monthly: 14990,
+      yearly: 149900,
     },
     stripeIds: {
       // @ts-ignore
       monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
       // @ts-ignore
-      yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,
+      yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
     },
   },
   {
     title: "Business",
-    description: "For Power Users",
+    description: "Para varias sucursales",
     benefits: [
-      "Unlimited posts",
-      "Real-time analytics and reporting",
-      "Access to all templates, including custom branding",
-      "24/7 business customer support",
-      "Personalized onboarding and account management.",
+      "Todo lo del plan Pro",
+      "Múltiples negocios o sucursales",
+      "Usuarios ilimitados",
+      "Boleta electrónica SII (próximamente)",
+      "Soporte prioritario dedicado",
     ],
     limitations: [],
     prices: {
-      monthly: 30,
-      yearly: 300,
+      monthly: 29990,
+      yearly: 299900,
     },
     stripeIds: {
       // @ts-ignore
-      monthly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
+      monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID,
       // @ts-ignore
       yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PRICE_ID,
     },

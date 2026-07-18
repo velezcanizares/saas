@@ -12,7 +12,16 @@ import { Modal } from "~/components/modal";
 import { siteConfig } from "~/config/site";
 import { useSigninModal } from "~/hooks/use-signin-modal";
 
+const clerkPk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkConfigured =
+  clerkPk.startsWith("pk_test_") || clerkPk.startsWith("pk_live_");
+
 export const SignInClerkModal = ({ dict }: { dict: Record<string, string> }) => {
+  if (!clerkConfigured) return null;
+  return <SignInClerkModalInner dict={dict} />;
+};
+
+const SignInClerkModalInner = ({ dict }: { dict: Record<string, string> }) => {
   const signInModal = useSigninModal();
   const [signInClicked, setSignInClicked] = useState(false);
   const { signIn } = useSignIn();

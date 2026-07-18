@@ -39,6 +39,14 @@ export const Trash = Lucide.Trash;
 export const Twitter = Lucide.Twitter;
 export const User = Lucide.User;
 export const Warning = Lucide.AlertTriangle;
+export const Store = Lucide.Store;
+export const Cart = Lucide.ShoppingCart;
+export const Package = Lucide.Package;
+export const Chart = Lucide.BarChart3;
+export const Wallet = Lucide.Wallet;
+export const Receipt = Lucide.Receipt;
+export const Tag = Lucide.Tag;
+export const Minus = Lucide.Minus;
 
 export const System: Icon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>

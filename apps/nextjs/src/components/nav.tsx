@@ -16,7 +16,11 @@ interface DashboardNavProps {
 }
 
 const iconMapObj = new Map([
-  ["clusters", Icons.Cluster],
+  ["reports", Icons.Chart],
+  ["pos", Icons.Cart],
+  ["sales", Icons.Receipt],
+  ["catalog", Icons.Package],
+  ["expenses", Icons.Wallet],
   ["billing", Icons.Billing],
   ["settings", Icons.Settings],
 ]);

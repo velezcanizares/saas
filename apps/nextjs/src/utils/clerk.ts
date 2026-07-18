@@ -42,13 +42,10 @@ export function isNoNeedProcess(request: NextRequest): boolean {
   return noNeedProcessRoute.some((route) => new RegExp(route).test(pathname));
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-export const middleware = clerkMiddleware(async (auth, req: NextRequest) => {
+function handleLocaleAndSkips(req: NextRequest): NextResponse | null {
   if (isNoNeedProcess(req)) {
     return null;
   }
-
   const isWebhooksRoute = req.nextUrl.pathname.startsWith("/api/webhooks/");
   if (isWebhooksRoute) {
     return NextResponse.next();
@@ -69,50 +66,79 @@ export const middleware = clerkMiddleware(async (auth, req: NextRequest) => {
       ),
     );
   }
+  return null;
+}
 
+// A real Clerk publishable key is `pk_test_...` or `pk_live_...`. When the
+// placeholder from `.env.example` (or any other invalid value) is present,
+// Clerk throws on every request and blocks even public pages. In that mode we
+// serve the site as unauthenticated and only apply the locale redirect.
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkConfigured =
+  clerkPublishableKey.startsWith("pk_test_") ||
+  clerkPublishableKey.startsWith("pk_live_");
+
+if (!clerkConfigured) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "[middleware] NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is missing or invalid — running without Clerk. Set a real pk_test_/pk_live_ key to enable authentication.",
+  );
+}
+
+export const middleware = clerkConfigured
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  if (isPublicRoute(req)) {
-    return null;
-  }
+  ? clerkMiddleware(async (auth, req: NextRequest) => {
+      const localeRedirect = handleLocaleAndSkips(req);
+      if (localeRedirect) return localeRedirect;
 
-  const { userId, sessionClaims } = await auth()
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      if (isPublicRoute(req)) {
+        return null;
+      }
 
-  const isAuth = !!userId;
-  let isAdmin = false
-  if (env.ADMIN_EMAIL) {
-    const adminEmails = env.ADMIN_EMAIL.split(",");
-    if (sessionClaims?.user?.email) {
-      isAdmin = adminEmails.includes(sessionClaims?.user?.email);
-    }
-  }
+      const { userId, sessionClaims } = await auth();
 
-  const isAuthPage = /^\/[a-zA-Z]{2,}\/(login|register|login-clerk)/.test(
-    req.nextUrl.pathname,
-  );
-  const isAuthRoute = req.nextUrl.pathname.startsWith("/api/trpc/");
-  const locale = getLocale(req);
-  if (isAuthRoute && isAuth) {
-    return NextResponse.next();
-  }
-  if (req.nextUrl.pathname.startsWith("/admin/dashboard")) {
-    if (!isAuth || !isAdmin)
-      return NextResponse.redirect(new URL(`/admin/login`, req.url));
-    return NextResponse.next();
-  }
-  if (isAuthPage) {
-    if (isAuth) {
-      return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
-    }
-    return null;
-  }
-  if (!isAuth) {
-    let from = req.nextUrl.pathname;
-    if (req.nextUrl.search) {
-      from += req.nextUrl.search;
-    }
-    return NextResponse.redirect(
-      new URL(`/${locale}/login-clerk?from=${encodeURIComponent(from)}`, req.url),
-    );
-  }
-})
+      const isAuth = !!userId;
+      let isAdmin = false;
+      if (env.ADMIN_EMAIL) {
+        const adminEmails = env.ADMIN_EMAIL.split(",");
+        if (sessionClaims?.user?.email) {
+          isAdmin = adminEmails.includes(sessionClaims?.user?.email);
+        }
+      }
+
+      const isAuthPage = /^\/[a-zA-Z]{2,}\/(login|register|login-clerk)/.test(
+        req.nextUrl.pathname,
+      );
+      const isAuthRoute = req.nextUrl.pathname.startsWith("/api/trpc/");
+      const locale = getLocale(req);
+      if (isAuthRoute && isAuth) {
+        return NextResponse.next();
+      }
+      if (req.nextUrl.pathname.startsWith("/admin/dashboard")) {
+        if (!isAuth || !isAdmin)
+          return NextResponse.redirect(new URL(`/admin/login`, req.url));
+        return NextResponse.next();
+      }
+      if (isAuthPage) {
+        if (isAuth) {
+          return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+        }
+        return null;
+      }
+      if (!isAuth) {
+        let from = req.nextUrl.pathname;
+        if (req.nextUrl.search) {
+          from += req.nextUrl.search;
+        }
+        return NextResponse.redirect(
+          new URL(
+            `/${locale}/login-clerk?from=${encodeURIComponent(from)}`,
+            req.url,
+          ),
+        );
+      }
+    })
+  : (req: NextRequest) => handleLocaleAndSkips(req) ?? NextResponse.next();
